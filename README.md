@@ -43,7 +43,7 @@ CouchDb View( No Reduce Function)
 ![Alt text](/artifacts/images/2-couchdb.png?raw=true "CouchDb View")
 
 
-## ExternalLibraries
+## External Libraries
  - nano
  - request
 
