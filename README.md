@@ -6,7 +6,7 @@ npm install
 swagger project start
 ```
 
-## What's in the project
+## What's in the Project
  - Promises
  - Promise All
  - CouchDb Interation( Can be used with IBM's Cloudant)

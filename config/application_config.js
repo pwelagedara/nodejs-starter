@@ -7,7 +7,7 @@ module.exports = function(app) {
 	
 	// Database
 	app.set('DATABASE', 'db_name');
-	app.set('DATABASE_CONNECTION', 'http://admin:password@host.eastus2.cloudapp.azure.com:5984');
+	app.set('DATABASE_CONNECTION', 'http://admin:GGyZTtaJkXd4@apifest-backend-db-v2.eastus2.cloudapp.azure.com:5984');
 
 	// URLs
 	app.set('URL_W3SCHOOL_CUSTOMERS', 'https://www.w3schools.com/angular/customers.php');
