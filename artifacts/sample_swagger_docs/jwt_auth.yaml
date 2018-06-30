@@ -1,0 +1,1020 @@
+swagger: "2.0"
+info:
+  version: "0.1"
+  title: Sample Voice API Services
+# during dev, should point to your local machine
+host: 127.0.0.1:6001
+# basePath prefixes all resource paths 
+basePath: /api
+# 
+schemes:
+  # tip: remove http to make production-grade
+  - http
+  - https
+# security definitions
+securityDefinitions:
+  jwtAuth:
+    type: apiKey
+    name: api_key
+    in: header
+# format of bodies a client can send (Content-Type)
+consumes:
+  - application/json
+# format of the responses to the client (Accepts)
+produces:
+  - application/json
+paths:
+
+  /authenticate:
+    x-swagger-router-controller: AuthenticationController
+    post:
+      summary: Authenticates an Admin User
+      description: Accepts the UserName and Password . Returns a Token to be used to access the secured endpoints.
+      operationId: authenticate
+      tags:
+        - Authentication
+      parameters:
+        - name: request
+          in: body
+          description: Request to the endpoint.
+          required: false
+          schema:
+            $ref: "#/definitions/AuthenticationRequest"
+      responses:
+        200:
+          description: Success. Returns an ID which should be used for subsequent API calls.
+          schema:
+            $ref: '#/definitions/AuthenticationSuccessResponse'
+        default:
+          description: Server Error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /notifications/call:
+    x-swagger-router-controller: VoiceNotificationController
+    post:
+      summary: Makes a call to a user
+      description: Accepts the user message. Returns the response.
+      operationId: makeCall
+      security:
+        - jwtAuth: []
+      tags:
+        - Notifications
+      parameters:
+        - name: request
+          in: body
+          description: Request to the endpoint.
+          required: false
+          schema:
+            $ref: "#/definitions/CallRequest"
+      responses:
+        200:
+          description: Success. Returns an ID which should be used for subsequent API calls.
+          schema:
+            $ref: '#/definitions/CallSuccessResponse'
+        500:
+          description: Failed to start. Returns a message why this initialization failed.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /notifications/text:
+    x-swagger-router-controller: TextNotificationController
+    post:
+      summary: Sends a text to a user
+      description: Accepts the user message. Returns the response.
+      operationId: sendText
+      security:
+        - jwtAuth: []
+      tags:
+        - Notifications
+      parameters:
+        - name: request
+          in: body
+          description: Request to the endpoint.
+          required: false
+          schema:
+            $ref: "#/definitions/SMSRequest"
+      responses:
+        200:
+          description: Success. Returns an ID which should be used for subsequent API calls.
+          schema:
+            $ref: '#/definitions/SMSSuccessResponse'
+        500:
+          description: Failed to start. Returns a message why this initialization failed.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /userGroup:
+    x-swagger-router-controller: UserController
+    post:
+      summary: Create User Group
+      description: Creates a new User Group
+      operationId: insertUserGroup
+      security:
+        - jwtAuth: []
+      tags:
+        - Users and User Groups
+      parameters:
+        - name: group
+          in: body
+          description: The details of the User Group to be created.
+          required: true
+          schema:
+            $ref: "#/definitions/UserGroup"
+      responses:
+        200:
+          description: User Group created
+          schema:
+            $ref: "#/definitions/UserGroupResponse"
+        500:
+          description: Server error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+    get:
+      summary: Retrieve User Groups
+      description: Retrieves all User Groups
+      operationId: getUserGroups
+      security:
+        - jwtAuth: []
+      tags:
+        - Users and User Groups
+      parameters:
+        - name: name
+          in: query
+          required: false
+          type: string
+          description: User Group Name
+      responses:
+        200:
+          description: User Groups returned
+          schema:
+            $ref: "#/definitions/UserGroupsResponse"
+        500:
+          description: Server error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /userGroup/findByName:
+    x-swagger-router-controller: UserController
+    get:
+      summary: Retrieve User Group by Name
+      description: Retrieves the User Group by Name
+      operationId: getUserGroupByName
+      security:
+        - jwtAuth: []
+      tags:
+        - Users and User Groups
+      parameters:
+        - name: name
+          in: query
+          required: true
+          type: string
+          description: The name of the User Group to be found
+      responses:
+        200:
+          description: User Groups returned
+          schema:
+            $ref: "#/definitions/UserGroupDef"
+        500:
+          description: Server error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /userGroup/{id}:
+    x-swagger-router-controller: UserController
+    delete:
+      summary: Delete User Group
+      description: Deletes a package
+      operationId: deleteUserGroup
+      security:
+        - jwtAuth: []
+      tags:
+        - Users and User Groups
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          description: The ID of the User Group to be deleted
+      responses:
+        200:
+          description: User Group deleted successfully.
+          schema:
+            $ref: "#/definitions/UserGroupResponse"
+        500:
+          description: Server error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+    get:
+      summary: Retrieve User Group by ID
+      description: Retrieves User Group by ID
+      operationId: getUserGroupById
+      security:
+        - jwtAuth: []
+      tags:
+        - Users and User Groups
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          description: The ID of the User Group to be found
+      responses:
+        200:
+          description: User Groups returned
+          schema:
+            $ref: "#/definitions/UserGroupsResponse"
+        500:
+          description: Server error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /userGroup/{id}/callAllUsers:
+    x-swagger-router-controller: CallUserGroupController
+    post:
+      summary: Call everyone in a User Group
+      description: Calls everyone in the User Group. Returns a UUID for the Group Call.
+      operationId: callUserGroup
+      security:
+        - jwtAuth: []
+      tags:
+        - Users and User Groups
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          description: The ID of the User Group to be called
+        - name: message
+          in: body
+          description: message to be sent.
+          required: true
+          schema:
+            $ref: "#/definitions/Message"
+      responses:
+        200:
+          description: User Group deleted successfully.
+          schema:
+            $ref: "#/definitions/CallUserGroupResponse"
+        500:
+          description: Server error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /userGroup/{id}/user:
+    x-swagger-router-controller: UserController
+    post:
+      summary: Create a User
+      description: Inserts a User to a User Group
+      operationId: insertUser
+      security:
+        - jwtAuth: []
+      tags:
+        - Users and User Groups
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          description: The ID of the User Group to which the User must be added
+        - name: user
+          in: body
+          description: The details of the User to be inserted.
+          required: true
+          schema:
+            $ref: "#/definitions/User"
+      responses:
+        200:
+          description: User inserted successfully.
+          schema:
+            $ref: "#/definitions/UserResponse"
+        500:
+          description: Server error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+    get:
+      summary: Retrieve Users
+      description: Gets the Users in a User Group
+      operationId: getUsers
+      security:
+        - jwtAuth: []
+      tags:
+        - Users and User Groups
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          description: The ID of the User Group in which the User is
+        - name: name
+          in: query
+          required: false
+          type: string
+          description: User Name
+        - name: phone
+          in: query
+          required: false
+          type: string
+          description: Phone Number of the User
+      responses:
+        200:
+          description: Fetched Users successfully.
+          schema:
+            $ref: "#/definitions/UsersResponse"
+        500:
+          description: Server error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /userGroup/{id}/user/{userId}:
+    x-swagger-router-controller: UserController
+    delete:
+      summary: Delete User
+      description: Deletes a User from a User Group
+      operationId: deleteUser
+      security:
+        - jwtAuth: []
+      tags:
+        - Users and User Groups
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          description: The ID of the User Group from which the User must be deleted
+        - name: userId
+          in: path
+          required: true
+          type: string
+          description: The ID of the User to be deleted
+      responses:
+        200:
+          description: User inserted successfully.
+          schema:
+            $ref: "#/definitions/UsersResponse"
+        500:
+          description: Server error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+    get:
+      summary: Retrieve a User
+      description: Retrieves the Users by ID
+      operationId: getUsersById
+      security:
+        - jwtAuth: []
+      tags:
+        - Users and User Groups
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          description: The ID of the User Group from which the User must be found
+        - name: userId
+          in: path
+          required: true
+          type: string
+          description: The ID of the User to be deleted
+      responses:
+        200:
+          description: Users returned
+          schema:
+            $ref: "#/definitions/UsersResponse"
+        500:
+          description: Server error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /broadcast:
+    x-swagger-router-controller: BroadcastController
+    get:
+      summary: Retrieve Broadcasts
+      description: Retrieves the Broadcasts
+      operationId: getBroadcasts
+      security:
+        - jwtAuth: []
+      tags:
+        - Broadcasts
+      parameters:
+        - name: group_id
+          in: query
+          required: false
+          type: string
+          description: The Group ID
+      responses:
+        200:
+          description: Broadcasts returned
+          schema:
+            $ref: "#/definitions/BroadcastsResponse"
+        500:
+          description: Server error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /broadcast/{broadcastId}:
+    x-swagger-router-controller: BroadcastController
+    get:
+      summary: Retrieve a Broadcast
+      description: Retrieves the Broadcasts by ID
+      operationId: getBroadcastsById
+      security:
+        - jwtAuth: []
+      tags:
+        - Broadcasts
+      parameters:
+        - name: broadcastId
+          in: path
+          required: true
+          type: string
+          description: The ID of the Broadcast
+      responses:
+        200:
+          description: Broadcasts returned
+          schema:
+            $ref: "#/definitions/BroadcastsResponse"
+        500:
+          description: Server error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /call:
+    x-swagger-router-controller: CallController
+    get:
+      summary: Retrieve Calls
+      description: Retrieves the Calls
+      operationId: getCalls
+      security:
+        - jwtAuth: []
+      tags:
+        - Calls
+      parameters:
+        - name: broadcast_id
+          in: query
+          required: false
+          type: string
+          description: The Broadcast ID
+        - name: group_id
+          in: query
+          required: false
+          type: string
+          description: The Group ID
+        - name: user_id
+          in: query
+          required: false
+          type: string
+          description: The User ID
+      responses:
+        200:
+          description: Broadcasts returned
+          schema:
+            $ref: "#/definitions/CallsResponse"
+        500:
+          description: Server error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /call/{callId}:
+    x-swagger-router-controller: CallController
+    get:
+      summary: Retrieve a Call
+      description: Retrieves the Calls by ID
+      operationId: getCallsById
+      security:
+        - jwtAuth: []
+      tags:
+        - Calls
+      parameters:
+        - name: callId
+          in: path
+          required: true
+          type: string
+          description: The ID of the Call
+      responses:
+        200:
+          description: Broadcasts returned
+          schema:
+            $ref: "#/definitions/CallsResponse"
+        500:
+          description: Server error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /event:
+    x-swagger-router-controller: EventController
+    get:
+      summary: Retrieve Events
+      description: Retrieves the event by the query parameters
+      operationId: getEvents
+      security:
+        - jwtAuth: []
+      tags:
+        - Events
+      parameters:
+        - name: group_id
+          in: query
+          required: false
+          type: string
+          description: The Group ID
+        - name: user_id
+          in: query
+          required: false
+          type: string
+          description: User ID
+        - name: broadcast_id
+          in: query
+          required: false
+          type: string
+          description: Broadcast ID
+      responses:
+        200:
+          description: Events returned
+          schema:
+            $ref: "#/definitions/EventsResponse"
+        500:
+          description: Server error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /event/{eventId}:
+    x-swagger-router-controller: EventController
+    get:
+      summary: Retrieve an Event
+      description: Retrieves the event by ID
+      operationId: getEventsById
+      security:
+        - jwtAuth: []
+      tags:
+        - Events
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          type: string
+          description: The ID of the Event
+      responses:
+        200:
+          description: Events returned
+          schema:
+            $ref: "#/definitions/EventsResponse"
+        500:
+          description: Server error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /event/findByCallGroupId:
+    x-swagger-router-controller: EventController
+    get:
+      summary: Retrieve Events by Group
+      description: Retrieves Events by Group ID
+      operationId: getEventByCallGroupId
+      security:
+        - jwtAuth: []
+      tags:
+        - Events
+      parameters:
+        - name: group_id
+          in: query
+          required: true
+          type: string
+          description: The Group ID
+      responses:
+        200:
+          description: Events returned
+          schema:
+            $ref: "#/definitions/EventsResponse"
+        500:
+          description: Server error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /event/findByUserId:
+    x-swagger-router-controller: EventController
+    get:
+      summary: Retrieve Event by User
+      description: Retrieves the event by User ID
+      operationId: getEventByUserId
+      security:
+        - jwtAuth: []
+      tags:
+        - Events
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          type: string
+          description: User ID
+      responses:
+        200:
+          description: Events returned
+          schema:
+            $ref: "#/definitions/EventsResponse"
+        500:
+          description: Server error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /event/findByBroadcastId:
+    x-swagger-router-controller: EventController
+    get:
+      summary: Retrieve Event by Broadcast
+      description: Retrieves the event by Broadcast ID
+      operationId: getEventByBroadcastId
+      security:
+        - jwtAuth: []
+      tags:
+        - Events
+      parameters:
+        - name: broadcast_id
+          in: query
+          required: true
+          type: string
+          description: Broadcast ID
+      responses:
+        200:
+          description: Events returned
+          schema:
+            $ref: "#/definitions/EventsResponse"
+        500:
+          description: Server error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /status:
+    x-swagger-router-controller: StatusController
+    get:
+      summary: Retrieve Statuses
+      description: Retrieves the Status by the Query prameters
+      operationId: getStatus
+      security:
+        - jwtAuth: []
+      tags:
+        - Statuses
+      parameters:
+        - name: broadcast_id
+          in: query
+          required: false
+          type: string
+          description: Broadcast ID
+        - name: user_id
+          in: query
+          required: false
+          type: string
+          description: User ID
+        - name: group_id
+          in: query
+          required: false
+          type: string
+          description: Group ID
+      responses:
+        200:
+          description: Statuses returned
+          schema:
+            $ref: "#/definitions/StatusResponse"
+        500:
+          description: Server error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /status/{statusId}:
+    x-swagger-router-controller: StatusController
+    get:
+      summary: Retrieve a Status
+      description: Retrieves the Status by ID
+      operationId: getStatusById
+      security:
+        - jwtAuth: []
+      tags:
+        - Statuses
+      parameters:
+        - name: statusId
+          in: path
+          required: true
+          type: string
+          description: The ID of the Status
+      responses:
+        200:
+          description: Statuses returned
+          schema:
+            $ref: "#/definitions/StatusResponse"
+        500:
+          description: Server error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /status/findByBroadcastId:
+    x-swagger-router-controller: StatusController
+    get:
+      summary: Retrieve Status by Broadcast
+      description: Retrieves the Status by Broadcast ID
+      operationId: getStatusByBroadcastId
+      security:
+        - jwtAuth: []
+      tags:
+        - Statuses
+      parameters:
+        - name: broadcast_id
+          in: query
+          required: true
+          type: string
+          description: Broadcast ID
+      responses:
+        200:
+          description: Statuses returned
+          schema:
+            $ref: "#/definitions/StatusResponse"
+        500:
+          description: Server error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /log/findByBroadcastId:
+    x-swagger-router-controller: AggregatedDataController
+    get:
+      summary: Retrieve Call Log by Broadcast
+      description: Retrieves the Call Log by Broadcast ID
+      operationId: getCallLogByBroadcastID
+      security:
+        - jwtAuth: []
+      tags:
+        - Logs
+      parameters:
+        - name: broadcast_id
+          in: query
+          required: true
+          type: string
+          description: Broadcast ID
+      responses:
+        200:
+          description: Logs returned
+          schema:
+            $ref: "#/definitions/AggregatedDataResponse"
+        500:
+          description: Server error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /swagger:
+    x-swagger-pipe: swagger_raw
+
+# complex objects have schema definitions
+definitions:
+
+  AuthenticationRequest:
+    required:
+      - username 
+      - password
+    properties:
+      username:
+        type: string
+      password:
+        type: string
+
+  AuthenticationSuccessResponse:
+    required:
+      - success
+      - token
+      - message
+    properties:
+      success:
+        type: boolean
+      message:
+        type: string
+      token:
+        type: string
+
+  CallSuccessResponse:
+    required:
+      - message
+    properties:
+      message:
+        type: string
+
+  SMSSuccessResponse:
+    required:
+      - message
+    properties:
+      message:
+        type: string
+
+  ErrorResponse:
+    required:
+      - message
+    properties:
+      message:
+        type: string
+
+  CallRequest:
+    properties:
+      message:
+        type: string
+
+  SMSRequest:
+    properties:
+      message:
+        type: string
+      phone:
+        type: string
+
+  UserGroupDef:
+    properties:
+      _id:
+        type: string
+      _rev:
+        type: string
+      name:
+        type: string
+      collection:
+        type: string
+
+  UserGroup:
+    properties:
+      name:
+        type: string
+
+  UserGroupResponse:
+    properties:
+      group_id:
+        type: string
+
+  UserGroupsResponse:
+    properties:
+      user_groups:
+        type: array
+        items:
+          $ref: "#/definitions/UserGroupDef"
+
+  User:
+    properties:
+      name:
+        type: string
+      phone:
+        type: string
+
+  UserResponse:
+    properties:
+      user_id:
+        type: string
+
+  UsersResponse:
+    properties:
+      users:
+        type: array
+        items:
+          $ref: "#/definitions/UserDef"
+
+  UserDef:
+    properties:
+      _id:
+        type: string
+      _rev:
+        type: string
+      group_id:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      collection:
+        type: string
+
+  CallUserGroupResponse:
+    properties:
+      uuid:
+        type: string
+
+  Message:
+    required:
+      - message
+    properties:
+      message:
+        type: string
+
+  BroadcastsResponse:
+    properties:
+      broadcasts:
+        type: array
+        items:
+          $ref: "#/definitions/BroadcastDef"
+
+  BroadcastDef:
+    properties:
+      _id:
+        type: string
+      _rev:
+        type: string
+      group_id:
+        type: string
+      broadcast_message:
+        type: string
+      collection:
+        type: string
+      date_time:
+        type: string
+
+  EventsResponse:
+    properties:
+      events:
+        type: array
+        items:
+          $ref: "#/definitions/EventDef"
+
+  EventDef:
+    properties:
+      _id:
+        type: string
+      _rev:
+        type: string
+      phone_number:
+        type: string
+      broadcast_id:
+        type: string
+      call_group_id:
+        type: string
+      user_id:
+        type: string
+      collection:
+        type: string
+      digits:
+        type: string
+      date_time:
+        type: string
+
+  StatusResponse:
+    properties:
+      events:
+        type: array
+        items:
+          $ref: "#/definitions/StatusDef"
+
+  StatusDef:
+    properties:
+      _id:
+        type: string
+      _rev:
+        type: string
+      call_status:
+        type: string
+      phone_number:
+        type: string
+      broadcast_id:
+        type: string
+      call_group_id:
+        type: string
+      user_id:
+        type: string
+      collection:
+        type: string
+      date_time:
+        type: string
+
+  CallsResponse:
+    properties:
+      calls:
+        type: array
+        items:
+          $ref: "#/definitions/CallDef"
+
+  CallDef:
+    properties:
+      _id:
+        type: string
+      _rev:
+        type: string
+      broadcast_id:
+        type: string
+      group_id:
+        type: string
+      user_id:
+        type: string
+      collection:
+        type: string
+      date_time:
+        type: string
+
+  AggregatedDataResponse:
+    properties:
+      broadcast:
+        $ref: "#/definitions/BroadcastDef"
+      call_log:
+        type: array
+        items:
+          $ref: "#/definitions/CallLogDef"
+
+  CallLogDef:
+    properties:
+      key:
+        type: string
+      calls:
+        type: array
+        items:
+          $ref: "#/definitions/CallDef"
+      event:
+        type: array
+        items:
+          $ref: "#/definitions/EventDef"
+      statuses:
+        type: array
+        items:
+          $ref: "#/definitions/StatusDef"
+      user:
+        $ref: "#/definitions/UserDef"
